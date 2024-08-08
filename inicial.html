@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halloween Pong</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            height: 100vh;
+            background-color: #1a1a1a;
+        }
+
+        #background-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        #background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: none; /* Inicialmente escondido */
+        }
+
+        h1 {
+            color: #fff;
+            font-family: sans-serif;
+            font-size: 4rem;
+            position: absolute;
+        }
+
+        #player1Score {
+            left: 35%;
+            top: 20px;
+        }
+
+        #player2Score {
+            right: 35%;
+            top: 20px;
+        }
+
+        .winner-message {
+            display: none;
+            text-align: center;
+            color: #fff;
+            font-family: "Creepster", cursive;
+            font-size: 3rem;
+            position: absolute;
+            top: 40%;
+            transform: translateY(-50%);
+        }
+
+        #winner-message-left {
+            left: 20%;
+        }
+
+        #winner-message-right {
+            right: 20%;
+        }
+
+        #restart-button, #start-button {
+            display: none; /* Inicialmente escondido */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff4500;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 24px;
+            cursor: pointer;
+            font-family: "Creepster", cursive;
+            text-shadow: 0 0 10px #000;
+        }
+
+        #restart-button:hover, #start-button:hover {
+            background-color: #ff6347;
+        }
+
+        #start-button {
+            display: block; /* Exibido inicialmente */
+        }
+
+        .difficulty-button {
+            display: block;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff4500;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            font-family: "Creepster", cursive;
+            text-shadow: 0 0 10px #000;
+            margin-top: 20px;
+        }
+
+        .difficulty-button:hover {
+            background-color: #ff6347;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="background-container">
+        <img id="background-image" src="https://i.pinimg.com/originals/9d/2d/0a/9d2d0a9d9352692b91f642bb9b4bff9f.jpg" alt="Halloween Background">
+    </div>
+    <div id="game-container">
+        <canvas id="canvas"></canvas>
+        <h1 id="player1Score">0</h1>
+        <h1 id="player2Score">0</h1>
+        <div id="winner-message-left" class="winner-message">
+            <h1 id="winner-text-left"></h1>
+        </div>
+        <div id="winner-message-right" class="winner-message">
+            <h1 id="winner-text-right"></h1>
+        </div>
+        <button id="restart-button">Reiniciar Jogo</button>
+    </div>
+
+    <button id="start-button"><a href="index.html">Iniciar Jogo</a></button>
+    
+    
+    
+
+
+    <audio id="background-music" preload="auto" loop>
+        <source src="Law & Order_dtJ6hot_GBY.mp3" type="audio/mp3">
+    </audio>
+</body>
+</html>

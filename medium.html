@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halloween Pong - Fácil</title>
+    <style>
+         * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            height: 100vh;
+            background-color: #1a1a1a;
+        }
+
+        #background-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        #background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: none; 
+        }
+
+        h1 {
+            color: #fff;
+            font-family: sans-serif;
+            font-size: 4rem;
+            position: absolute;
+        }
+
+        #player1Score {
+            left: 35%;
+            top: 20px;
+        }
+
+        #player2Score {
+            right: 35%;
+            top: 20px;
+        }
+
+        .winner-message {
+            display: none;
+            text-align: center;
+            color: #fff;
+            font-family: "Creepster", cursive;
+            font-size: 3rem;
+            position: absolute;
+            top: 40%;
+            transform: translateY(-50%);
+        }
+
+        #winner-message-left {
+            left: 20%;
+        }
+
+        #winner-message-right {
+            right: 20%;
+        }
+
+        #restart-button, #start-button {
+            display: none; 
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ff4500;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 24px;
+            cursor: pointer;
+            font-family: "Creepster", cursive;
+            text-shadow: 0 0 10px #000;
+        }
+
+        #restart-button:hover, #start-button:hover {
+            background-color: #ff6347;
+        }
+
+        #start-button {
+            display: block; /* Exibido inicialmente */
+        }
+
+        .difficulty-button {
+            display: block;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ff4500;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            font-family: "Creepster", cursive;
+            text-shadow: 0 0 10px #000;
+            margin-top: 20px;
+        }
+
+        .difficulty-button:hover {
+            background-color: #ff6347;
+        }
+    </style>
+    <link href="/index.html" rel="stylesheet">
+</head>
+<body>
+    <div id="background-container">
+        <img id="background-image" src="https://i.pinimg.com/originals/9d/2d/0a/9d2d0a9d9352692b91f642bb9b4bff9f.jpg" alt="Halloween Background">
+    </div>
+    <div id="game-container">
+        <canvas id="canvas"></canvas>
+        <h1 id="player1Score">0</h1>
+        <h1 id="player2Score">0</h1>
+        <div id="winner-message-left" class="winner-message">
+            <h1 id="winner-text-left"></h1>
+        </div>
+        <div id="winner-message-right" class="winner-message">
+            <h1 id="winner-text-right"></h1>
+        </div>
+        <button id="restart-button">Reiniciar Jogo</button>
+    </div>
+    <button id="start-button">Iniciar Jogo</button>
+    <audio id="background-music" preload="auto" loop>
+        <source src="Law & Order_dtJ6hot_GBY.mp3" type="audio/mp3">
+    </audio>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const keysPressed = [];
+        const KEY_UP = 38;
+        const KEY_DOWN = 40;
+        const KEY_W = 87;
+        const KEY_S = 83;
+        let isGameOver = false;
+
+        window.addEventListener('keydown', function (e) {
+            keysPressed[e.keyCode] = true;
+        });
+
+        window.addEventListener('keyup', function (e) {
+            keysPressed[e.keyCode] = false;
+        });
+
+        function vec2(x, y) {
+            return {x: x, y: y};
+        }
+
+        function Ball(pos, velocity, radius) {
+            this.pos = pos;
+            this.velocity = velocity;
+            this.radius = radius;
+
+            this.update = function () {
+                this.pos.x += this.velocity.x;
+                this.pos.y += this.velocity.y;
+            };
+
+            this.draw = function () {
+                ctx.fillStyle = "#FFA500"; // Laranja
+                ctx.strokeStyle = "#FFA500"; // Laranja
+                ctx.beginPath();
+                ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            };
+        }
+
+        function Paddle(pos, velocity, width, height) {
+            this.pos = pos;
+            this.velocity = velocity;
+            this.width = width;
+            this.height = height;
+            this.score = 0;
+
+            this.update = function () {
+                if (keysPressed[KEY_UP]) {
+                    this.pos.y -= this.velocity.y;
+                }
+
+                if (keysPressed[KEY_DOWN]) {
+                    this.pos.y += this.velocity.y;
+                }
+
+                if (this.pos.y < 0) {
+                    this.pos.y = 0;
+                }
+
+                if (this.pos.y + this.height > canvas.height) {
+                    this.pos.y = canvas.height - this.height;
+                }
+            };
+
+            this.draw = function() {
+                ctx.fillStyle = "#4B0082"; // Roxo
+                ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+            };
+
+            this.getHalfWidth = function () {
+                return this.width / 2;
+            };
+
+            this.getHalfHeight = function () {
+                return this.height / 2;
+            };
+
+            this.getCenter = function () {
+                return vec2(
+                    this.pos.x + this.getHalfWidth(),
+                    this.pos.y + this.getHalfHeight()
+                );
+            };
+        }
+
+        function ballCollisionWithTheEdges(ball) {
+            if (ball.pos.y + ball.radius >= canvas.height || ball.pos.y - ball.radius <= 0) {
+            ball.velocity.y *= -1;
+            }
+            }
+
+                function ballPaddleCollision(ball, paddle) {
+                    let dx = Math.abs(ball.pos.x - paddle.getCenter().x);
+                    let dy = Math.abs(ball.pos.y - paddle.getCenter().y);
+
+                    if (dx <= (ball.radius + paddle.getHalfWidth()) && dy <= (paddle.getHalfHeight() + ball.radius)) {
+                        ball.velocity.x *= -1;
+                    }
+                }
+
+                function player2Update(paddle) {
+                    if (keysPressed[KEY_W]) {
+                        paddle.pos.y -= paddle.velocity.y;
+                        if (paddle.pos.y <= 0) {
+                            paddle.pos.y = 0;
+                        }
+                    }
+                    if (keysPressed[KEY_S]) {
+                        paddle.pos.y += paddle.velocity.y;
+                        if (paddle.pos.y + paddle.height >= canvas.height) {
+                            paddle.pos.y = canvas.height - paddle.height;
+                        }
+                    }
+                }
+
+                function respawnBall(ball) {
+                    ball.pos.x = canvas.width / 2;
+                    ball.pos.y = canvas.height / 2;
+                    ball.velocity.x *= -1;
+                    ball.velocity.y *= -1;
+                }
+
+                function checkWinner(paddle1, paddle2) {
+                    if (paddle1.score >= 5) {
+                        showWinnerMessage("Jogador 1 Venceu!", "left");
+                        return true;
+                    } else if (paddle2.score >= 5) {
+                        showWinnerMessage("Jogador 2 Venceu!", "right");
+                        return true;
+                    }
+                    return false;
+                }
+
+                function showWinnerMessage(message, position) {
+                    if (position === "left") {
+                        document.getElementById("winner-message-left").style.display = "block";
+                        document.getElementById("winner-text-left").innerHTML = message;
+                    } else {
+                        document.getElementById("winner-message-right").style.display = "block";
+                        document.getElementById("winner-text-right").innerHTML = message;
+                    }
+                    document.getElementById("restart-button").style.display = "block";
+                    isGameOver = true;
+                }
+
+                function increaseScore(ball, paddle1, paddle2) {
+                    if (!isGameOver) {
+                        if (ball.pos.x <= -ball.radius) {
+                            paddle2.score += 1;
+                            document.getElementById("player2Score").innerHTML = paddle2.score;
+                            respawnBall(ball);
+                        }
+
+                        if (ball.pos.x >= canvas.width + ball.radius) {
+                            paddle1.score += 1;
+                            document.getElementById("player1Score").innerHTML = paddle1.score;
+                            respawnBall(ball);
+                        }
+
+                        if (checkWinner(paddle1, paddle2)) {
+                            // Parar o jogo
+                            window.cancelAnimationFrame(gameLoop);
+                        }
+                    }
+                }
+
+                function drawGameScene() {
+                    ctx.strokeStyle = "#ffff00";
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 20;
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(canvas.width, 0);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 20;
+                    ctx.moveTo(0, canvas.height);
+                    ctx.lineTo(canvas.width, canvas.height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 15;
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, canvas.height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 15;
+                    ctx.moveTo(canvas.width, 0);
+                    ctx.lineTo(canvas.width, canvas.height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.lineWidth = 10;
+                    ctx.moveTo(canvas.width / 2, 0);
+                    ctx.lineTo(canvas.width / 2, canvas.height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(canvas.width / 2, canvas.height / 2, 50, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                const ball = new Ball(vec2(canvas.width / 2, canvas.height / 2), vec2(10, 10), 20);
+                const paddle1 = new Paddle(vec2(0, canvas.height / 2 - 80), vec2(12, 12), 20, 160);
+                const paddle2 = new Paddle(vec2(canvas.width - 20, canvas.height / 2 - 80), vec2(12, 12), 20, 160);
+
+                function gameUpdate() {
+                    ball.update();
+                    paddle1.update();
+                    ballCollisionWithTheEdges(ball);
+                    player2Update(paddle2);
+                    ballPaddleCollision(ball, paddle1);
+                    ballPaddleCollision(ball, paddle2);
+                    increaseScore(ball, paddle1, paddle2);
+                }
+
+                function gameDraw() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ball.draw();
+                    paddle1.draw();
+                    paddle2.draw();
+                    drawGameScene();
+                }
+
+                function gameLoop() {
+                    if (!isGameOver) {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(document.getElementById('background-image'), 0, 0, canvas.width, canvas.height);
+                        gameUpdate();
+                        gameDraw();
+                        requestAnimationFrame(gameLoop);
+                    }
+                }
+
+                document.getElementById('start-button').addEventListener('click', function() {
+                    document.getElementById('game-container').style.display = 'block';
+                    document.getElementById('start-button').style.display = 'none';
+                    gameLoop();
+                });
+
+                document.getElementById('restart-button').addEventListener('click', function() {
+                    ball.pos = vec2(canvas.width / 2, canvas.height / 2);
+                    ball.velocity = vec2(10, 10); 
+                    paddle1.score = 0;
+                    paddle2.score = 0;
+                    document.getElementById('player1Score').innerHTML = paddle1.score;
+                    document.getElementById('player2Score').innerHTML = paddle2.score;
+                    document.getElementById('winner-message-left').style.display = 'none';
+                    document.getElementById('winner-message-right').style.display = 'none';
+                    document.getElementById('restart-button').style.display = 'none';
+                    isGameOver = false;
+                    gameLoop();
+                });
+
+                window.addEventListener('resize', function() {
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                });
+
+            </script>
+
+            </body>
+            </html>
